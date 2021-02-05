@@ -1,5 +1,5 @@
 {
-  "name": "ESP-iMonitorAssay",
+  "name": "esp-imonitor-assay",
   "version": "4.5.0",
   "private": true,
   "author": "jaysg",
@@ -7,9 +7,10 @@
   "description": "An out-of-box UI solution for enterprise applications",
   "scripts": {
     "edev": "electron . dev",
-    "edev:prod": "electron .",
+    "estart": "electron .",
     "pack-all": "electron-builder -mwl",
     "pack-build": "npm run build && electron-builder --win",
+    "pack-win": "electron-builder --win",
     "pack-win:dev": "cross-env NODE_ENV=dev electron-builder --win",
     "pack-win:prod": "cross-env NODE_ENV=production electron-builder --win",
     "analyze": "cross-env ANALYZE=1 umi build",
@@ -29,7 +30,6 @@
     "precommit": "lint-staged",
     "prettier": "prettier -c --write \"src/**/*\"",
     "site": "npm run fetch:blocks && npm run build",
-    "estart": "cross-env UMI_ENV=dev umi dev && npm run edev",
     "start": "cross-env UMI_ENV=dev umi dev",
     "start:dev": "cross-env MOCK=none UMI_ENV=dev umi dev",
     "start:no-mock": "cross-env MOCK=none UMI_ENV=dev umi dev",
@@ -114,19 +114,18 @@
   },
   "build": {
     "asar": true,
-    "productName": "isys7",
-    "appId": "isys7",
+    "productName": "iMonitorAssay",
+    "appId": "supcon-iSys7",
     "extends": null,
     "files": [
       "dist",
       "node_modules/",
-      "main.js",
+      "electron/main.js",
       "package.json"
     ],
     "mac": {
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ]
     },
     "dmg": {
@@ -144,15 +143,14 @@
       ]
     },
     "win": {
-      "icon": "icon.ico",
+      "icon": "electron/tray.ico",
       "target": [
-        "nsis",
-        "zip"
+        "nsis"
       ]
     },
     "directories": {
       "app": "./",
-      "buildResources": "resources",
+      "buildResources": "public",
       "output": "./build"
     },
     "compression": "normal",

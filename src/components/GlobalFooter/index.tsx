@@ -4,12 +4,19 @@ import { GlobalOutlined } from '@ant-design/icons';
 import { Dropdown, Menu } from 'antd';
 import { FormattedMessage, setLocale } from 'umi';
 import React from 'react';
+import { electron } from '@/utils/electron';
 
+/** 窗体通用底部 */
 const GlobalFooter = () => {
   const isOnline = useNetworkStatus();
+  /** 告诉Electron 国际化变化了 */
+  const setAppLocale = (locale: string) => {
+    if (electron) console.log(electron.ipcRenderer.sendSync('set-locale', locale));
+  };
+  /** 菜单项点击事件 */
   const handleSelectLang = (e: any) => {
-    console.log(e);
     setLocale(e.key);
+    setAppLocale(e.key);
   };
 
   const menu = (

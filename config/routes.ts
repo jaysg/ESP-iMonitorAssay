@@ -42,7 +42,17 @@
                 path: '/tool',
                 name: 'tool',
                 icon: 'smile',
-                component: './Tool',
+                routes: [
+                  {
+                    path: '/tool/synchronous',
+                    name: 'synchronous',
+                    icon: 'smile',
+                    component: './Tool',
+                  },
+                  {
+                    component: './404',
+                  },
+                ],
               },
               {
                 component: './404',

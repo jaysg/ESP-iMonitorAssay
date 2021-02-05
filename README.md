@@ -10,7 +10,7 @@
 ## 项目目录
 
 ```
-- build             //桌面应用产物
+- app             //桌面应用产物
 - config            //配置
 - dist              //WEB应用产物
 - electron          //桌面应用脚本
@@ -31,3 +31,16 @@
   - ^typings.d.ts     //类型声明
 - ^main.js          桌面应用主进程脚本（需要分离脚本到electron目录下）
 ```
+
+## 项目部署
+
+1. 安装 nodejs
+2. 部署前端项目并运行
+   1. npm install tyarn
+   2. tyarn
+   3. npm start
+3. 运行桌面应用程序
+   1. 开发模式 npm run edev
+   2. 生产环境
+      1. npm run pack-win:prod
+      2. 运行 build 目录下的 exe 应用程序

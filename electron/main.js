@@ -1,29 +1,26 @@
 // 你可以在这个脚本中续写或者使用require引入独立的js文件.
-const { app, BrowserWindow, ipcMain, Menu, Tray } = require('electron');
-
-const notifier = require('node-notifier');
+const { app, BrowserWindow, ipcMain, Menu, globalShortcut } = require('electron');
 const path = require('path');
+const {
+  initFlash,
+  initFlashEvent,
+  initShortcut,
+  initLocaleEvent,
+  initOSNotifierEvent,
+} = require('./util');
 
-// ======================= 系统托盘图表及菜单 start
-let appIcon = null;
 app.whenReady().then(() => {
-  appIcon = new Tray(path.join(__dirname, './favicon.ico'));
-  //参考electron/electron.d.ts or https://www.electronjs.org/docs/api/menu-item
-  const contextMenu = Menu.buildFromTemplate([
-    { label: 'Item1', type: 'radio' },
-    { label: 'Item2', type: 'radio' },
-    { type: 'separator' },
-    { role: 'minimize', label: '最小化' },
-    { role: 'quit', label: '退出' },
-  ]);
-
-  // Make a change to the context menu
-  contextMenu.items[1].checked = true;
-  appIcon.setToolTip('过程监控');
-  // 添加到上下文
-  appIcon.setContextMenu(contextMenu);
+  initFlash();
+  initShortcut();
+  initFlashEvent();
+  initLocaleEvent();
+  initOSNotifierEvent();
 });
-// ======================= 系统托盘图表及菜单 end
+
+app.on('will-quit', () => {
+  // 注销所有快捷键
+  globalShortcut.unregisterAll();
+});
 
 // 获取在 package.json 中的命令脚本传入的参数，来判断是开发还是生产环境
 // const mode = process.argv[2];
@@ -43,9 +40,14 @@ let mainWindow;
 let toolWindow;
 
 function createLoginWindow() {
-  // 创建浏览器窗口,宽高自定义具体大小你开心就好
-  Menu.setApplicationMenu(null);
+  const wins = BrowserWindow.getAllWindows();
+  wins.forEach((win) => {
+    win.webContents.closeDevTools();
+    win.close();
+  });
+
   loginWindow = new BrowserWindow({
+    title: 'login',
     minWidth: 960,
     minHeight: 540,
     width: 960,
@@ -56,11 +58,9 @@ function createLoginWindow() {
       webSecurity: false,
       nodeIntegration: true,
       enableRemoteModule: true,
+      contextIsolation: false,
     },
   });
-
-  // 加载应用----适用于 react 项目
-  // loginWindow.loadURL(mode === 'dev' ? 'http://localhost:8000/#/' : startUrl);
   loginWindow.loadURL('http://localhost:8000/#/user/login');
 
   // 打开开发者工具，默认不打开
@@ -69,6 +69,53 @@ function createLoginWindow() {
   // 关闭window时触发下列事件.
   loginWindow.on('closed', () => {
     loginWindow = null;
+  });
+}
+function createMainWindow() {
+  Menu.setApplicationMenu(null);
+  if (mainWindow) {
+    mainWindow.close();
+  }
+  mainWindow = new BrowserWindow({
+    title: 'main',
+    minWidth: 1280,
+    minHeight: 768,
+    width: 1280,
+    height: 768,
+    frame: false,
+    webPreferences: {
+      // preload: path.join(__dirname, 'preload.js'),
+      webSecurity: false,
+      nodeIntegration: true,
+      enableRemoteModule: true,
+      contextIsolation: false,
+    },
+  });
+  mainWindow.loadURL('http://localhost:8000/#/index');
+  mainWindow.show();
+  mainWindow.webContents.openDevTools();
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+  mainWindow.on('crashed', () => {
+    console.log('crashed');
+    //当渲染进程崩溃或被结束时触发
+  });
+  mainWindow.on('render-process-gone', () => {
+    console.log('render-process-gone');
+    //当渲染程序进程意外消失时触发。这通常是因为它销毁或终止。
+  });
+  mainWindow.on('unresponsive', () => {
+    console.log('unresponsive');
+    //网页变得未响应时触发
+  });
+  mainWindow.on('plugin-crashed', () => {
+    console.log('plugin-crashed');
+    //当有插件进程崩溃时触发
+  });
+  mainWindow.on('destroyed', () => {
+    //当webContents被销毁时，触发该事件
+    console.log('destroyed');
   });
 }
 
@@ -99,53 +146,28 @@ app.on('activate', () => {
 ipcMain.on('open-main', (event, arg) => {
   if (loginWindow) {
     loginWindow.webContents.closeDevTools();
-    loginWindow.hide();
+    loginWindow.close();
   }
-  if (mainWindow) {
-    mainWindow.hide();
-    mainWindow = null;
-  }
-  // 创建浏览器窗口,宽高自定义具体大小你开心就好
-  mainWindow = new BrowserWindow({
-    minWidth: 1280,
-    minHeight: 768,
-    width: 1280,
-    height: 768,
-    frame: false,
-    webPreferences: {
-      // preload: path.join(__dirname, 'preload.js'),
-      webSecurity: false,
-      nodeIntegration: true,
-      enableRemoteModule: true,
-    },
-  });
-
-  // 加载应用----适用于 react 项目
-  // mainWindow.loadURL(mode === 'dev' ? 'http://localhost:8000/#/user/login' : startUrl);
-  mainWindow.loadURL('http://localhost:8000/#/index');
-  mainWindow.show();
-  mainWindow.webContents.openDevTools();
-
+  createMainWindow();
   event.returnValue = mainWindow.id;
 });
+
 //关闭所有窗口，打开登录窗口
 ipcMain.on('open-login', (event, arg) => {
-  const wins = BrowserWindow.getAllWindows();
-  wins.forEach((win) => {
-    win.webContents.closeDevTools();
-    win.close();
-  });
-  loginWindow.show();
+  createLoginWindow();
+  event.returnValue = loginWindow.id;
 });
 
 //打开工具窗口
 ipcMain.on('open-tool', (event, arg) => {
   if (toolWindow) {
-    toolWindow.hide();
+    toolWindow.close();
     toolWindow = null;
   }
   // 创建浏览器窗口,宽高自定义
   toolWindow = new BrowserWindow({
+    parent: mainWindow,
+    title: 'tools',
     width: 800,
     height: 600,
     webPreferences: {
@@ -153,22 +175,11 @@ ipcMain.on('open-tool', (event, arg) => {
       webSecurity: false,
       nodeIntegration: true,
       enableRemoteModule: true,
+      contextIsolation: false,
     },
   });
-
-  // 加载应用----适用于 react 项目
-  // toolWindow.loadURL(mode === 'dev' ? 'http://localhost:8000/#/tool' : startUrl);
-  toolWindow.loadURL('http://localhost:8000/#/tool');
+  toolWindow.loadURL(`http://localhost:8000/#/${arg}`);
   toolWindow.show();
 
   event.returnValue = toolWindow.id;
-});
-//在主进程中创建事件监听，调用系统通知
-ipcMain.on('send-notifier', (event, arg) => {
-  const notice = JSON.parse(arg);
-  // String
-  // notifier.notify(notice.message);
-  // Object
-  notifier.notify(notice);
-  event.returnValue = 'success';
 });

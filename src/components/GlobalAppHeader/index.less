@@ -1,0 +1,61 @@
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.icons {
+  display: flex;
+  margin: -5px;
+  -webkit-app-region: no-drag;
+  i {
+    display: block;
+    width: 36px;
+    height: 31px;
+    padding: 5px 10px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 16px;
+    cursor: pointer;
+  }
+  i:hover {
+    background-color: #aaa;
+  }
+  .home {
+    background-image: url('../../assets/window-home.png');
+  }
+  .close {
+    background-image: url('../../assets/window-close.png');
+  }
+  .minimize {
+    background-image: url('../../assets/window-minimize.png');
+  }
+  .maximize {
+    background-image: url('../../assets/window-maximize.png');
+  }
+  .restore {
+    background-image: url('../../assets/window-restore.png');
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  width: 600px;
+  height: 44px;
+  margin-right: 16px;
+  padding-left: 246px;
+  background-image: url('../../assets/supcon.png');
+  background-repeat: no-repeat;
+  background-position: left;
+  background-size: 236px 25px;
+}
+
+:global {
+  .ant-layout-header {
+    height: 60px;
+    line-height: 60px;
+    -webkit-app-region: drag;
+  }
+}

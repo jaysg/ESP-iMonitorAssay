@@ -2,15 +2,14 @@ import { LockTwoTone, UserOutlined } from '@ant-design/icons';
 import { Alert, Button } from 'antd';
 import React from 'react';
 import ProForm, { ProFormCheckbox, ProFormText } from '@ant-design/pro-form';
-import { useIntl, connect, FormattedMessage } from 'umi';
+import { useIntl, connect, FormattedMessage, history } from 'umi';
 import type { Dispatch } from 'umi';
 import type { StateType } from '@/models/login';
 import type { LoginParamsType } from '@/services/login';
 import type { ConnectState } from '@/models/connect';
 import styles from './index.less';
+import { electron } from '@/utils/electron';
 
-const electron = window.require('electron');
-const { ipcRenderer } = electron;
 // const { dialog, BrowserWindow, Menu, MenuItem } = remote;
 // const isMac = process.platform === 'darwin';
 
@@ -130,7 +129,8 @@ const Login: React.FC<LoginProps> = (props) => {
       </ProForm>
       <Button
         onClick={() => {
-          ipcRenderer.sendSync('open-main', './index');
+          if (electron) electron.ipcRenderer.sendSync('open-main', './index');
+          else history.push('/index');
         }}
       >
         模拟登陆成功

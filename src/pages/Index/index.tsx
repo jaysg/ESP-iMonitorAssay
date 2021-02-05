@@ -1,238 +1,106 @@
-/* eslint-disable no-console */
 import React, { useEffect, useState } from 'react';
-import { PageContainer } from '@ant-design/pro-layout';
-import { Card, Typography, Button, message } from 'antd';
-import { FormattedMessage } from 'umi';
+import { Button, Card, Modal, Space } from 'antd';
 import styles from './index.less';
-
-const electron = window.require('electron');
-const { remote, ipcRenderer } = electron;
-const { dialog, BrowserWindow, Menu, MenuItem } = remote;
-const isMac = process.platform === 'darwin';
-
-const CodePreview: React.FC = ({ children }) => (
-  <pre className={styles.pre}>
-    <code>
-      <Typography.Text copyable>{children}</Typography.Text>
-    </code>
-  </pre>
-);
+import Authorized from '@/utils/Authorized';
+import eAPIs from '@/utils/electron';
 
 export default (): React.ReactNode => {
-  // 在线状态 -------------------------------------------start
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [downKeys, setDownKeys] = useState<string[]>([]);
+  const onKeyPress = (e: any) => {
+    // 只能监测到ctrl、shift和基础按键的组合，alt在keydown可监测
+    const keys = [];
+    if (e.ctrlKey) keys.push('ctrl');
+    if (e.shiftKey) keys.push('shift');
+    if (e.altKey) keys.push('alt');
+    keys.push(e.code);
+    keys.push(e.key);
+    console.log(keys.join('+'));
+    setDownKeys(keys);
+  };
   useEffect(() => {
-    if (isOnline) message.success('网络已连接');
-    else message.warn('网络已断开');
-  }, [isOnline]);
-  // 在线状态 -------------------------------------------end
-
-  useEffect(() => {
-    // 在线状态 -------------------------------------------start
-    window.removeEventListener('online', () => {
-      setIsOnline(navigator.onLine);
-    });
-    window.removeEventListener('offline', () => {
-      setIsOnline(navigator.onLine);
-    });
-    window.addEventListener('online', () => {
-      setIsOnline(navigator.onLine);
-    });
-    window.addEventListener('offline', () => {
-      setIsOnline(navigator.onLine);
-    });
-    // 在线状态 -------------------------------------------end
-
-    // 右击菜单实现 -------------------------------------------start
-    const menu = new Menu();
-    menu.append(
-      new MenuItem({
-        label: '常规菜单项',
-        click() {
-          console.log('item 1 clicked');
-        },
-      }),
-    );
-    menu.append(
-      new MenuItem({
-        label: 'File',
-        submenu: [isMac ? { role: 'close' } : { role: 'quit' }],
-      }),
-    );
-    menu.append(
-      new MenuItem({
-        label: 'Edit',
-        submenu: [
-          { role: 'undo' },
-          { role: 'redo' },
-          { type: 'separator' },
-          { role: 'cut' },
-          { role: 'copy' },
-          { role: 'paste' },
-          ...(isMac
-            ? [
-                { role: 'pasteAndMatchStyle' },
-                { role: 'delete' },
-                { role: 'selectAll' },
-                { type: 'separator' },
-                {
-                  label: 'Speech',
-                  submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }],
-                },
-              ]
-            : [{ role: 'delete' }, { type: 'separator' }, { role: 'selectAll' }]),
-        ],
-      }),
-    );
-    menu.append(new MenuItem({ type: 'separator' }));
-    menu.append(new MenuItem({ label: '开关菜单项', type: 'checkbox', checked: true }));
-    menu.append(new MenuItem({ type: 'separator' }));
-    menu.append(
-      new MenuItem({
-        label: '常规菜单项',
-        submenu: [
-          { role: 'about' },
-          { type: 'separator' },
-          { role: 'services' },
-          { type: 'separator' },
-          { role: 'hide' },
-          { role: 'hideothers' },
-          { role: 'unhide' },
-          { type: 'separator' },
-          { role: 'quit' },
-        ],
-      }),
-    );
-
-    window.removeEventListener('contextmenu', () => {});
-    window.addEventListener(
-      'contextmenu',
-      (e) => {
-        e.preventDefault();
-        menu.popup({ window: remote.getCurrentWindow() });
-      },
-      false,
-    );
-    //  右击菜单实现 -------------------------------------------end
-  }, []);
-  const createWindow = () => {
-    console.log(ipcRenderer.sendSync('open-login', './index'));
-  };
-  const openTool = () => {
-    console.log(ipcRenderer.sendSync('open-tool', './tool'));
-  };
-  /** 渲染进程使用remote打开新窗口 */
-  const remoteCreateWindow = () => {
-    const win = new BrowserWindow({ width: 800, height: 600 });
-    win.loadURL('https://github.com');
-
-    const contents = win.webContents;
-    console.log(contents);
-  };
-  /** 修改自身窗体对象 */
-  const updateSelfWindow = () => {
-    const win = remote.getCurrentWindow();
-    win.loadURL('https://www.baidu.com');
-  };
-  /** 打开文件 */
-  const openFile = () => {
-    const promise: Promise<any> = dialog.showOpenDialog({
-      properties: ['openFile', 'multiSelections'],
-      filters: [
-        { name: '图片', extensions: ['jpg', 'png', 'gif'] },
-        { name: '视频', extensions: ['mkv', 'avi', 'mp4'] },
-        { name: '自定义类型', extensions: ['as'] },
-        { name: '全部', extensions: ['*'] },
-      ],
-    });
-    promise
-      .then((data) => {
-        const { canceled, filePaths } = data;
-        if (!canceled) console.log(filePaths);
-        else console.log('取消了文件选择');
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
-  /** 显示通知 */
-  const showNotification = () => {
-    const notice = {
-      title: '自定义通知标题',
-      message: '自定义通知的内容!',
+    eAPIs.setContextMenu();
+    // 按键监听 logger 监听
+    window.addEventListener('keypress', onKeyPress);
+    return () => {
+      // 组件卸载移除按键监听
+      window.removeEventListener('keypress', onKeyPress);
     };
-    const result = ipcRenderer.sendSync('send-notifier', JSON.stringify(notice));
-    console.log(result);
+  }, []);
+
+  /** Alert效果 */
+  const showMessageBoxAlert = () => {
+    // eslint-disable-next-line no-alert
+    alert('alert：我想写log');
   };
-  const showMessageBox = () => {
-    dialog.showMessageBoxSync({
-      title: '提示信息标题',
-      type: 'none', // "none", "info", "error", "question" 或者 "warning"
-      message: '内容主题：内容内容内容内容内容内容内容内容内容内容内容',
-      defaultId: 0,
-      cancelId: 1,
-      buttons: ['确定'],
+
+  /** Modal */
+  const showModal = () => {
+    Modal.info({
+      title: '标题',
+      content: '内容',
+      closable: true,
     });
   };
+
   return (
-    <PageContainer>
-      <div
-        style={{
-          background: 'gray',
-          padding: 20,
-        }}
-      >
-        <Button className={styles.btn} onClick={createWindow}>
+    <Space
+      direction="vertical"
+      wrap={true}
+      style={{ width: '100%', padding: 50, position: 'absolute', top: 0 }}
+    >
+      <Card title="进程通讯">
+        <Button className={styles.btn} onClick={eAPIs.openLoginWin}>
           主进程打开登录窗口
         </Button>
-        <Button className={styles.btn} onClick={openTool}>
-          主进程打开工具窗口
-        </Button>
-        <Button className={styles.btn} onClick={remoteCreateWindow}>
+        <Button className={styles.btn} onClick={eAPIs.remoteToGithub}>
           渲染进程打开github
         </Button>
-        <Button className={styles.btn} onClick={updateSelfWindow}>
+        <Button className={styles.btn} onClick={eAPIs.remoteToBaidu}>
           渲染进程修改自己的地址
         </Button>
-        <Button className={styles.btn} onClick={openFile}>
+      </Card>
+      <Card title="弹窗">
+        <Button className={styles.btn} onClick={showModal}>
+          页面级对话框ant-modal（Web）
+        </Button>
+        <div>https://ant.design/components/modal-cn/#API</div>
+        <Button className={styles.btn} onClick={eAPIs.showMessageBox}>
+          窗口级对话框dialog（Window）
+        </Button>
+        <div>https://www.electronjs.org/docs/api/dialog</div>
+        <Button className={styles.btn} onClick={showMessageBoxAlert}>
+          窗口级对话框alert（WebBrowser）（纯文本）
+        </Button>
+      </Card>
+      <Card title="系统">
+        <Button className={styles.btn} onClick={eAPIs.openFile}>
           打开文件
         </Button>
-        <Button className={styles.btn} onClick={showNotification}>
+        <Button className={styles.btn} onClick={eAPIs.showNotification}>
           显示系统通知
         </Button>
-        <Button className={styles.btn} onClick={showMessageBox}>
-          成功提示对话框
+        <Button className={styles.btn} onClick={eAPIs.trayFlashing}>
+          小图标闪烁
         </Button>
-      </div>
-      <div
-        style={{
-          background: 'gray',
-          marginTop: 10,
-          padding: 20,
-          color: 'white',
-        }}
-      >
-        右击菜单有实现哦
-      </div>
-      <Card>
-        <CodePreview>yarn add @ant-design/pro-table</CodePreview>
-        <Typography.Text
-          strong
-          style={{
-            marginBottom: 12,
-          }}
-        >
-          <FormattedMessage id="pages.welcome.advancedLayout" defaultMessage="高级布局" />{' '}
-          <a
-            href="https:// procomponents.ant.design/components/layout"
-            rel="noopener noreferrer"
-            target="__blank"
-          >
-            <FormattedMessage id="pages.welcome.link" defaultMessage="欢迎使用" />
-          </a>
-        </Typography.Text>
-        <CodePreview>yarn add @ant-design/pro-layout</CodePreview>
+        <Button className={styles.btn} onClick={eAPIs.trayFlashEnd}>
+          关闭小图标闪烁
+        </Button>
       </Card>
-    </PageContainer>
+      <Card title="右击菜单">右击鼠标</Card>
+      <Card title="快捷键">
+        当前按键：{downKeys.length ? downKeys.join('+') : '无'}
+        <br />
+        已注册的快捷键：ctrl+shift+V
+        <br />
+        提示：与系统或其他进程注册的快捷键会失效
+      </Card>
+      <Card title="权限校验">
+        权限控制(admin可以看到的按钮)：
+        {Authorized.check(['admin'], <Button>我是admin的按钮</Button>, null)}
+        <br />
+        权限控制(guest可以看到的按钮)：
+        {Authorized.check(['guest'], <Button>我是guest的按钮</Button>, null)}
+      </Card>
+    </Space>
   );
 };

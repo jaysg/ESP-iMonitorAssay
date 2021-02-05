@@ -8,16 +8,9 @@ import type { ConnectState } from '@/models/connect';
 import { Modal, Layout } from 'antd';
 import styles from './UserLayout.less';
 import GlobalFooter from '@/components/GlobalFooter';
+import { electron } from '@/utils/electron';
 
 const { Header, Footer, Content } = Layout;
-
-// import electron from 'electron';
-const electron = window.require('electron');
-const { remote } = electron;
-const { app } = remote;
-const eMenu = remote.Menu;
-const browserWindow = remote.getCurrentWindow();
-eMenu.setApplicationMenu(null);
 
 export type UserLayoutProps = {
   breadcrumbNameMap: Record<string, MenuDataItem>;
@@ -26,6 +19,8 @@ export type UserLayoutProps = {
 const UserLayout: React.FC<UserLayoutProps> = (props) => {
   const [winStatus, setWinStatus] = useState('restore');
   useEffect(() => {
+    if (!electron) return;
+    const browserWindow = electron.remote.getCurrentWindow();
     switch (winStatus) {
       case 'mini':
         browserWindow.minimize();
@@ -37,8 +32,7 @@ const UserLayout: React.FC<UserLayoutProps> = (props) => {
         browserWindow.unmaximize();
         break;
       case 'close':
-        // browserWindow.close();
-        app.exit();
+        electron.remote.app.exit();
         break;
       default:
         break;
@@ -64,8 +58,6 @@ const UserLayout: React.FC<UserLayoutProps> = (props) => {
     breadcrumb,
     ...props,
   });
-
-  useEffect(() => {}, []);
   return (
     <HelmetProvider>
       <Helmet>
@@ -103,12 +95,6 @@ const UserLayout: React.FC<UserLayoutProps> = (props) => {
           <GlobalFooter />
         </Footer>
       </Layout>
-      {/* <div>
-        <div className={styles.content}>
-          <div></div>
-        </div>
-        <div className={styles.footer}></div>
-      </div> */}
     </HelmetProvider>
   );
 };
