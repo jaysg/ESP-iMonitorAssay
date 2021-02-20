@@ -39,6 +39,22 @@
                 component: './TableList',
               },
               {
+                path: '/set',
+                name: 'set',
+                icon: 'smile',
+                routes: [
+                  {
+                    path: '/set/theme',
+                    name: 'theme',
+                    icon: 'smile',
+                    component: './Set/Theme',
+                  },
+                  {
+                    component: './404',
+                  },
+                ],
+              },
+              {
                 path: '/tool',
                 name: 'tool',
                 icon: 'smile',

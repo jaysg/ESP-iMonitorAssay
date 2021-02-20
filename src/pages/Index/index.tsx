@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Card, Modal, Space } from 'antd';
+import { useEffect, useState } from 'react';
+import { Button, Card, Modal, Space, Upload } from 'antd';
 import styles from './index.less';
 import Authorized from '@/utils/Authorized';
 import eAPIs from '@/utils/electron';
+import fAPIs from '@/utils/fs';
 
 export default (): React.ReactNode => {
   const [downKeys, setDownKeys] = useState<string[]>([]);
@@ -41,6 +42,40 @@ export default (): React.ReactNode => {
       closable: true,
     });
   };
+  const initConfig = () => {
+    fAPIs
+      .chkConfigFile()
+      .then((data: any) => {
+        console.log(data);
+        return data;
+      })
+      .catch((err: any) => {
+        console.error(err);
+        fAPIs.genConfigFile();
+      });
+  };
+  const handleUploadLoginBg = (file: any) => {
+    fAPIs.copyFileToDir(file.path, file.name);
+    fAPIs
+      .chkConfigFile()
+      .then((configObj: any) => {
+        // 在原配置基础上生成配置文件 带图片路径
+        fAPIs.genConfigFile({
+          ...configObj,
+          loginBgPath: file.name,
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        // 生成新配置文件 带图片路径
+        fAPIs.genConfigFile({
+          loginBgPath: file.name,
+        });
+      });
+
+    // 阻止事件传递
+    return false;
+  };
 
   return (
     <Space
@@ -48,6 +83,17 @@ export default (): React.ReactNode => {
       wrap={true}
       style={{ width: '100%', padding: 50, position: 'absolute', top: 0 }}
     >
+      <Card title="文件操作">
+        <Button className={styles.btn} onClick={initConfig}>
+          生成配置文件到系统目录
+        </Button>
+        <Upload beforeUpload={handleUploadLoginBg}>
+          <Button className={styles.btn}>选择图片复制到系统目录</Button>
+        </Upload>
+        <Upload beforeUpload={handleUploadLoginBg}>
+          <Button className={styles.btn}>选择图片复制到项目根目录</Button>
+        </Upload>
+      </Card>
       <Card title="进程通讯">
         <Button className={styles.btn} onClick={eAPIs.openLoginWin}>
           主进程打开登录窗口
@@ -84,6 +130,12 @@ export default (): React.ReactNode => {
         </Button>
         <Button className={styles.btn} onClick={eAPIs.trayFlashEnd}>
           关闭小图标闪烁
+        </Button>
+        <Button className={styles.btn} onClick={() => eAPIs.flashFrame(true)}>
+          窗口开始闪烁
+        </Button>
+        <Button className={styles.btn} onClick={() => eAPIs.flashFrame(false)}>
+          窗口停止闪烁（点任务栏自动停止）
         </Button>
       </Card>
       <Card title="右击菜单">右击鼠标</Card>

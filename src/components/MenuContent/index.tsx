@@ -1,17 +1,22 @@
 import { electron } from '@/utils/electron';
 import { SettingOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
-import React from 'react';
+import { history } from 'umi';
 
 const { SubMenu } = Menu;
 const MenuContent = () => {
   /** 窗体主菜单 点击事件 */
   const handleClick = (e: any) => {
     const keyPath = e.keyPath.reverse().join('-');
+    console.log(keyPath);
     switch (keyPath) {
       case 'tool-synchronous':
         // 打开工具窗口 跳转到同步页面
         if (electron) console.log(electron.ipcRenderer.sendSync('open-tool', 'tool/synchronous'));
+        break;
+      case 'set-theme':
+        // 打开工具窗口 跳转到同步页面
+        history.push('/set/theme');
         break;
 
       default:

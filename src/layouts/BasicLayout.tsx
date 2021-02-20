@@ -4,7 +4,7 @@ import type {
   Settings,
   BasicLayoutProps as ProLayoutProps,
 } from '@ant-design/pro-layout';
-import React, { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import type { Dispatch } from 'umi';
 import { Link, connect } from 'umi';
 import { Result, Button, Layout } from 'antd';
@@ -55,14 +55,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
   } = props;
 
   const menuDataRef = useRef<MenuDataItem[]>([]);
-  useEffect(() => {
-    window.addEventListener('resize', () => {
-      console.log(window.document.body.clientHeight);
-    });
-    return () => {
-      window.removeEventListener('resize', () => {});
-    };
-  }, []);
   // get children authority
   const authorized = useMemo(
     () =>
@@ -75,7 +67,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
   return (
     <Layout className={styles.mainLayout}>
       <Header style={{ display: electron ? 'flex' : 'none' }}>
-        <GlobalAppHeader />
+        <GlobalAppHeader type="normal" />
       </Header>
       <MenuContent />
       <Content

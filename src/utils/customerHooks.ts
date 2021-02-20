@@ -5,7 +5,7 @@ const EmptyFunc = () => {};
 export function useNetworkStatus() {
   const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
   useEffect(() => {
-    console.log(networkStatus ? 'online' : 'offline');
+    // console.log(networkStatus ? 'online' : 'offline');
     window.addEventListener('online', () => setNetworkStatus(navigator.onLine));
     window.addEventListener('offline', () => setNetworkStatus(navigator.onLine));
   }, [networkStatus]);

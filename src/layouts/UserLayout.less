@@ -1,14 +1,5 @@
 @import '~antd/es/style/themes/default.less';
 
-.mainLayout {
-  :global {
-    .ant-layout-header {
-      height: 60px;
-      line-height: 60px;
-      -webkit-app-region: drag;
-    }
-  }
-}
 .loginLayout,
 .mainLayout {
   :global {
@@ -20,7 +11,7 @@
       padding-right: 10px;
       padding-left: 10px;
       line-height: 30px;
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.7);
       -webkit-app-region: drag;
     }
     .ant-layout-content {
@@ -35,10 +26,33 @@
       padding-right: 10px;
       padding-left: 10px;
       line-height: 30px;
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.7);
       border-top: 1px solid #ccc;
     }
   }
+}
+
+.mainLayout {
+  :global {
+    .ant-layout-header {
+      height: 60px;
+      line-height: 60px;
+    }
+  }
+}
+.loginLayout {
+  // background-image: url('../../public/loginBg.jpg');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100% 100%;
+  // :global {
+  //   .ant-layout-content {
+  //     background-image: url('../../public/loginBg.jpg');
+  //     background-repeat: no-repeat;
+  //     background-position: center center;
+  //     background-size: 100% 100%;
+  //   }
+  // }
 }
 
 .container {

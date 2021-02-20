@@ -169,6 +169,13 @@ export const setContextMenu = () => {
     );
   }
 };
+
+/** 窗口闪烁 */
+export const flashFrame = (flag: boolean) => {
+  const win = electron.remote.getCurrentWindow();
+  win.flashFrame(flag);
+};
+
 const APIs = {
   openLoginWin,
   trayFlashing,
@@ -179,6 +186,7 @@ const APIs = {
   showNotification,
   showMessageBox,
   setContextMenu,
+  flashFrame,
 };
 
 export default APIs;

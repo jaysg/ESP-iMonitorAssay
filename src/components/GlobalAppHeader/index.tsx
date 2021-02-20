@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import styles from './index.less';
 import { electron } from '@/utils/electron';
 
-const GlobalAppHeader = () => {
-  const [winStatus, setWinStatus] = useState('restore');
-  useEffect(() => {
+const GlobalAppHeader = (props: any) => {
+  const winStatBtnClick = (type: string) => {
     if (!electron) return;
     const browserWindow = electron.remote.getCurrentWindow();
-    switch (winStatus) {
+    switch (type) {
+      case 'home':
+        history.push('/');
+        break;
       case 'mini':
         browserWindow.minimize();
         break;
@@ -25,23 +27,39 @@ const GlobalAppHeader = () => {
       default:
         break;
     }
-  }, [winStatus]);
+  };
+  const [windowStatus, setWindowStatus] = useState('normal');
+  useEffect(() => {
+    window.addEventListener('resize', () => {
+      if (!electron) return;
+      const browserWindow = electron.remote.getCurrentWindow();
+      if (browserWindow.isMaximized()) {
+        setWindowStatus('maxi');
+      } else if (browserWindow.isNormal()) {
+        setWindowStatus('normal');
+      }
+    });
+    return () => {
+      window.removeEventListener('resize', () => {
+        console.log('移除监听');
+      });
+    };
+  }, []);
   return (
     <>
-      <span className={styles.logo}>过程监控 ESP-iMonitorAssay</span>
+      <span className={props.type === 'normal' ? styles.logo : undefined}>
+        过程监控 ESP-iMonitorAssay
+      </span>
       <div className={styles.icons}>
-        <i
-          className={styles.home}
-          onClick={() => {
-            history.push('/');
-          }}
-        />
-        <i className={styles.minimize} onClick={() => setWinStatus('mini')} />
-        {winStatus === 'restore' && (
-          <i className={styles.maximize} onClick={() => setWinStatus('maxi')} />
+        {props.type === 'normal' && (
+          <i className={styles.home} onClick={() => winStatBtnClick('home')} />
         )}
-        {winStatus === 'maxi' && (
-          <i className={styles.restore} onClick={() => setWinStatus('restore')} />
+        <i className={styles.minimize} onClick={() => winStatBtnClick('mini')} />
+        {windowStatus === 'normal' && (
+          <i className={styles.maximize} onClick={() => winStatBtnClick('maxi')} />
+        )}
+        {windowStatus === 'maxi' && (
+          <i className={styles.restore} onClick={() => winStatBtnClick('restore')} />
         )}
         <i
           className={styles.close}
@@ -51,7 +69,7 @@ const GlobalAppHeader = () => {
               content: '是否确认关闭应用？',
               okButtonProps: { danger: true },
               onOk() {
-                setWinStatus('close');
+                winStatBtnClick('close');
               },
             });
           }}
